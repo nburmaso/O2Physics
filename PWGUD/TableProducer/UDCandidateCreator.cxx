@@ -123,7 +123,7 @@ struct CandidateCreator {
         barTrackCandIds[id] = candID;
         const auto& tr = barTracks->iteratorAt(id);
         netCharge += tr.sign();
-        if (0/*tr.hasTOF()*/) {
+        if (0 /*tr.hasTOF()*/) {
           RgtrwTOF++;
         }
       }
