@@ -266,7 +266,7 @@ struct UpcCandProducer {
   {
     for (auto trackID : trackIDs) {
       const auto& track = tracks.iteratorAt(trackID);
-      double trTime = track.trackTime() - std::round(track.trackTime() / o2::constants::lhc::LHCBunchSpacingNS) * o2::constants::lhc::LHCBunchSpacingNS;
+      double trTime = track.trackTime() - bc * o2::constants::lhc::LHCBunchSpacingNS;
       udFwdTracks(candID, track.px(), track.py(), track.pz(), track.sign(), bc, trTime, track.trackTimeRes());
       udFwdTracksExtra(track.nClusters(), track.pDca(), track.rAtAbsorberEnd(), track.chi2(), track.chi2MatchMCHMID(),
                        track.mchBitMap(), track.midBitMap(), track.midBoards());
@@ -292,7 +292,7 @@ struct UpcCandProducer {
   {
     for (auto trackID : trackIDs) {
       const auto& track = tracks.iteratorAt(trackID);
-      double trTime = track.trackTime() - std::round(track.trackTime() / o2::constants::lhc::LHCBunchSpacingNS) * o2::constants::lhc::LHCBunchSpacingNS;
+      double trTime = track.trackTime() - bc * o2::constants::lhc::LHCBunchSpacingNS;
       int64_t colId = -1;
       if (ambBarrelTrBCs.find(trackID) == ambBarrelTrBCs.end()) {
         colId = track.collisionId();
