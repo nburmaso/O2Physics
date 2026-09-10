@@ -125,9 +125,11 @@ DECLARE_SOA_COLUMN(Px, px, std::vector<float>);
 DECLARE_SOA_COLUMN(Py, py, std::vector<float>);
 DECLARE_SOA_COLUMN(Pz, pz, std::vector<float>);
 DECLARE_SOA_COLUMN(TpcSignal, tpcSignal, std::vector<float>);
+DECLARE_SOA_COLUMN(TpcNSigmaEl, tpcNSigmaEl, std::vector<float>);
 DECLARE_SOA_COLUMN(TpcNSigmaPi, tpcNSigmaPi, std::vector<float>);
 DECLARE_SOA_COLUMN(TpcNSigmaKa, tpcNSigmaKa, std::vector<float>);
 DECLARE_SOA_COLUMN(TpcNSigmaPr, tpcNSigmaPr, std::vector<float>);
+DECLARE_SOA_COLUMN(TofNSigmaEl, tofNSigmaEl, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaPi, tofNSigmaPi, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaKa, tofNSigmaKa, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaPr, tofNSigmaPr, std::vector<float>);
@@ -152,9 +154,11 @@ DECLARE_SOA_TABLE(DGTwoTrackCands, "AOD", "DGTWOTRACKCANDS",
                   dg_two_track_cand::Py,
                   dg_two_track_cand::Pz,
                   dg_two_track_cand::TpcSignal,
+                  dg_two_track_cand::TpcNSigmaEl,
                   dg_two_track_cand::TpcNSigmaPi,
                   dg_two_track_cand::TpcNSigmaKa,
                   dg_two_track_cand::TpcNSigmaPr,
+                  dg_two_track_cand::TofNSigmaEl,
                   dg_two_track_cand::TofNSigmaPi,
                   dg_two_track_cand::TofNSigmaKa,
                   dg_two_track_cand::TofNSigmaPr,
@@ -340,8 +344,8 @@ struct DgTwoTrackCandProducer {
         continue;
       }
       std::vector<float> px, py, pz;
-      std::vector<float> tpcSignal, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr;
-      std::vector<float> tofNSigmaPi, tofNSigmaKa, tofNSigmaPr;
+      std::vector<float> tpcSignal, tpcNSigmaEl, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr;
+      std::vector<float> tofNSigmaEl, tofNSigmaPi, tofNSigmaKa, tofNSigmaPr;
       std::vector<uint8_t> itsClusterMaps;
       std::vector<uint8_t> nClusters;
       std::vector<int8_t> sign;
@@ -353,9 +357,11 @@ struct DgTwoTrackCandProducer {
         py.push_back(track.py());
         pz.push_back(track.pz());
         tpcSignal.push_back(track.tpcSignal());
+        tpcNSigmaEl.push_back(track.tpcNSigmaEl());
         tpcNSigmaPi.push_back(track.tpcNSigmaPi());
         tpcNSigmaKa.push_back(track.tpcNSigmaKa());
         tpcNSigmaPr.push_back(track.tpcNSigmaPr());
+        tofNSigmaEl.push_back(track.tofNSigmaEl());
         tofNSigmaPi.push_back(track.tofNSigmaPi());
         tofNSigmaKa.push_back(track.tofNSigmaKa());
         tofNSigmaPr.push_back(track.tofNSigmaPr());
@@ -367,8 +373,8 @@ struct DgTwoTrackCandProducer {
         continue;
       }
       selectedCandidates(bc.runNumber(), gbc, bc.timestamp(), collision.posX(), collision.posY(), collision.posZ(),
-                         px, py, pz, tpcSignal, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr,
-                         tofNSigmaPi, tofNSigmaKa, tofNSigmaPr, itsClusterMaps, nClusters, sign,
+                         px, py, pz, tpcSignal, tpcNSigmaEl, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr,
+                         tofNSigmaEl, tofNSigmaPi, tofNSigmaKa, tofNSigmaPr, itsClusterMaps, nClusters, sign,
                          getStoredDistance(distFT0), getStoredDistance(distFV0), getStoredDistance(distFDD));
     }
   }
