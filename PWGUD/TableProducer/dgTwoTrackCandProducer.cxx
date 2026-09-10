@@ -187,8 +187,8 @@ struct DgTwoTrackCandProducer {
   using CollisionsWithSels = soa::Join<aod::Collisions, aod::EvSels>;
   using BCsWithSels = soa::Join<aod::BCsWithTimestamps, aod::BcSels>;
   using TracksWithPID = soa::Join<aod::Tracks, aod::TracksExtra,
-                                  aod::pidTPCFullPi, aod::pidTPCFullKa, aod::pidTPCFullPr,
-                                  aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr>;
+                                  aod::pidTPCEl, aod::pidTPCPi, aod::pidTPCKa, aod::pidTPCPr,
+                                  aod::pidTOFEl, aod::pidTOFPi, aod::pidTOFKa, aod::pidTOFPr>;
   Preslice<TracksWithPID> tracksPerCollision = aod::track::collisionId;
 
   RCTFlagsChecker rctChecker{kFDDBad, kFT0Bad, kFV0Bad, kITSBad, kITSLimAccMCRepr, kTPCBadTracking, kTPCLimAccMCRepr, kTPCBadPID, kTOFBad, kTOFLimAccMCRepr, kCcdbObjectLoaded};
