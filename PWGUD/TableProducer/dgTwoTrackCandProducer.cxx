@@ -42,7 +42,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <utility>
 #include <vector>
 
 using namespace o2;
@@ -54,7 +53,6 @@ namespace
 constexpr int NBCsPerOrbit = o2::constants::lhc::LHCMaxBunches;
 constexpr int MaxStoredDistance = 15;
 constexpr float MaxFITTime = 30.f;
-constexpr size_t CandidateTrackCount = 2;
 
 using DistanceMap = std::vector<std::vector<uint32_t>>;
 
@@ -185,6 +183,7 @@ struct DgTwoTrackCandProducer {
   int tfEndBorder = 0;
   std::bitset<NBCsPerOrbit> collidingBCs;
 
+  Configurable<size_t> candidateTrackCount{"candidateTrackCount", 2, "Required N tracks in selected collisions"};
   Configurable<float> maxAbsEta{"maxAbsEta", 0.8f, "Maximum |eta| of selected tracks"};
   Configurable<float> minPt{"minPt", 0.2f, "Minimum pT of selected tracks (GeV/c)"};
   Configurable<int> vetoBCWindow{"vetoBCWindow", 0, "FIT veto half-window in BC; <0 disables"};
@@ -329,7 +328,7 @@ struct DgTwoTrackCandProducer {
     }
 
     for (const auto& collision : collisions) {
-      if (collision.numContrib() != CandidateTrackCount || !collision.selection_bit(aod::evsel::kNoTimeFrameBorder) || !rctChecker(collision)) {
+      if (collision.numContrib() != candidateTrackCount || !collision.selection_bit(aod::evsel::kNoTimeFrameBorder) || !rctChecker(collision)) {
         continue;
       }
       auto bc = collision.bc_as<BCsWithSels>();
@@ -369,7 +368,7 @@ struct DgTwoTrackCandProducer {
         nClusters.push_back(track.tpcNClsFound());
         sign.push_back(track.sign());
       }
-      if (px.size() != CandidateTrackCount) {
+      if (px.size() != candidateTrackCount) {
         continue;
       }
       selectedCandidates(bc.runNumber(), gbc, bc.timestamp(), collision.posX(), collision.posY(), collision.posZ(),
