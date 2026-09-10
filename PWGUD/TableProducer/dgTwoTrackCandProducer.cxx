@@ -47,6 +47,7 @@
 
 using namespace o2;
 using namespace o2::framework;
+using namespace o2::aod::rctsel;
 
 namespace
 {
@@ -89,18 +90,18 @@ DistanceMap buildMinimumDistanceMap(std::vector<uint32_t> const& tfIDs,
   return distances;
 }
 
-void fillVetoHistograms(std::shared_ptr<TH2> const& hTV0, std::shared_ptr<TH2> const& hTVD, int bcInOrbit,
+void fillVetoHistograms(std::shared_ptr<TH2> const& hVetoTV0, std::shared_ptr<TH2> const& hVetoTVD, int bcInOrbit,
                         uint32_t distanceFT0, uint32_t distanceFV0, uint32_t distanceFDD)
 {
-  hTV0->Fill(bcInOrbit, -1);
-  hTVD->Fill(bcInOrbit, -1);
+  hVetoTV0->Fill(bcInOrbit, -1);
+  hVetoTVD->Fill(bcInOrbit, -1);
   for (uint32_t threshold = 0; threshold <= MaxStoredDistance; ++threshold) {
     if (distanceFT0 <= threshold || distanceFV0 <= threshold) {
       continue;
     }
-    hTV0->Fill(bcInOrbit, threshold);
+    hVetoTV0->Fill(bcInOrbit, threshold);
     if (distanceFDD > threshold) {
-      hTVD->Fill(bcInOrbit, threshold);
+      hVetoTVD->Fill(bcInOrbit, threshold);
     }
   }
 }
@@ -190,9 +191,7 @@ struct DgTwoTrackCandProducer {
                                   aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr>;
   Preslice<TracksWithPID> tracksPerCollision = aod::track::collisionId;
 
-  o2::aod::rctsel::RCTFlagsChecker rctChecker{o2::aod::rctsel::kFDDBad, o2::aod::rctsel::kFT0Bad, o2::aod::rctsel::kFV0Bad,
-                                              o2::aod::rctsel::kITSBad, o2::aod::rctsel::kTPCBadTracking, o2::aod::rctsel::kTPCBadPID,
-                                              o2::aod::rctsel::kTOFBad, o2::aod::rctsel::kCcdbObjectLoaded};
+  RCTFlagsChecker rctChecker{kFDDBad, kFT0Bad, kFV0Bad, kITSBad, kTPCBadTracking, kTPCBadPID, kTOFBad, kCcdbObjectLoaded};
 
   void init(InitContext& initContext)
   {
