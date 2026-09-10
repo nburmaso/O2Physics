@@ -191,7 +191,7 @@ struct DgTwoTrackCandProducer {
                                   aod::pidTOFFullPi, aod::pidTOFFullKa, aod::pidTOFFullPr>;
   Preslice<TracksWithPID> tracksPerCollision = aod::track::collisionId;
 
-  RCTFlagsChecker rctChecker{kFDDBad, kFT0Bad, kFV0Bad, kITSBad, kTPCBadTracking, kTPCBadPID, kTOFBad, kCcdbObjectLoaded};
+  RCTFlagsChecker rctChecker{kFDDBad, kFT0Bad, kFV0Bad, kITSBad, kITSLimAccMCRepr, kTPCBadTracking, kTPCLimAccMCRepr, kTPCBadPID, kTOFBad, kTOFLimAccMCRepr, kCcdbObjectLoaded};
 
   void init(InitContext& initContext)
   {
