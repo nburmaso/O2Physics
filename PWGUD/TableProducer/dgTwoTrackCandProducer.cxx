@@ -115,7 +115,6 @@ void fillVetoHistograms(std::shared_ptr<TH2> const& hVetoT00, std::shared_ptr<TH
 
 namespace o2::aod::dg_two_track_cand
 {
-DECLARE_SOA_COLUMN(SourceCollisionId, sourceCollisionId, int64_t);
 DECLARE_SOA_COLUMN(RunNumber, runNumber, int32_t);
 DECLARE_SOA_COLUMN(GlobalBC, globalBC, uint64_t);
 DECLARE_SOA_COLUMN(Timestamp, timestamp, uint64_t);
@@ -132,7 +131,7 @@ DECLARE_SOA_COLUMN(TpcNSigmaPr, tpcNSigmaPr, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaPi, tofNSigmaPi, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaKa, tofNSigmaKa, std::vector<float>);
 DECLARE_SOA_COLUMN(TofNSigmaPr, tofNSigmaPr, std::vector<float>);
-DECLARE_SOA_COLUMN(ItsClusterSizes, itsClusterSizes, std::vector<uint32_t>);
+DECLARE_SOA_COLUMN(ItsClusterMap, itsClusterSizes, std::vector<uint8_t>);
 DECLARE_SOA_COLUMN(NClusters, nClusters, std::vector<uint8_t>);
 DECLARE_SOA_COLUMN(Sign, sign, std::vector<int8_t>);
 DECLARE_SOA_COLUMN(MinimumDistanceFT0, minimumDistanceFT0, int8_t);
@@ -143,7 +142,6 @@ DECLARE_SOA_COLUMN(MinimumDistanceFDD, minimumDistanceFDD, int8_t);
 namespace o2::aod
 {
 DECLARE_SOA_TABLE(DGTwoTrackCands, "AOD", "DGTWOTRACKCANDS",
-                  dg_two_track_cand::SourceCollisionId,
                   dg_two_track_cand::RunNumber,
                   dg_two_track_cand::GlobalBC,
                   dg_two_track_cand::Timestamp,
@@ -160,7 +158,7 @@ DECLARE_SOA_TABLE(DGTwoTrackCands, "AOD", "DGTWOTRACKCANDS",
                   dg_two_track_cand::TofNSigmaPi,
                   dg_two_track_cand::TofNSigmaKa,
                   dg_two_track_cand::TofNSigmaPr,
-                  dg_two_track_cand::ItsClusterSizes,
+                  dg_two_track_cand::ItsClusterMap,
                   dg_two_track_cand::NClusters,
                   dg_two_track_cand::Sign,
                   dg_two_track_cand::MinimumDistanceFT0,
@@ -344,7 +342,7 @@ struct DgTwoTrackCandProducer {
       std::vector<float> px, py, pz;
       std::vector<float> tpcSignal, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr;
       std::vector<float> tofNSigmaPi, tofNSigmaKa, tofNSigmaPr;
-      std::vector<uint32_t> itsClusterSizes;
+      std::vector<uint8_t> itsClusterMaps;
       std::vector<uint8_t> nClusters;
       std::vector<int8_t> sign;
       for (const auto& track : tracks.sliceBy(tracksPerCollision, collision.globalIndex())) {
@@ -361,16 +359,16 @@ struct DgTwoTrackCandProducer {
         tofNSigmaPi.push_back(track.tofNSigmaPi());
         tofNSigmaKa.push_back(track.tofNSigmaKa());
         tofNSigmaPr.push_back(track.tofNSigmaPr());
-        itsClusterSizes.push_back(track.itsClusterSizes());
+        itsClusterMaps.push_back(track.itsClusterMap());
         nClusters.push_back(track.tpcNClsFound());
         sign.push_back(track.sign());
       }
       if (px.size() != CandidateTrackCount) {
         continue;
       }
-      selectedCandidates(collision.globalIndex(), bc.runNumber(), gbc, bc.timestamp(), collision.posX(), collision.posY(), collision.posZ(),
+      selectedCandidates(bc.runNumber(), gbc, bc.timestamp(), collision.posX(), collision.posY(), collision.posZ(),
                          px, py, pz, tpcSignal, tpcNSigmaPi, tpcNSigmaKa, tpcNSigmaPr,
-                         tofNSigmaPi, tofNSigmaKa, tofNSigmaPr, itsClusterSizes, nClusters, sign,
+                         tofNSigmaPi, tofNSigmaKa, tofNSigmaPr, itsClusterMaps, nClusters, sign,
                          getStoredDistance(distFT0), getStoredDistance(distFV0), getStoredDistance(distFDD));
     }
   }
