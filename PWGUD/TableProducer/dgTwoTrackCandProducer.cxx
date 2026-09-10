@@ -60,7 +60,7 @@ using DistanceMap = std::vector<std::vector<uint32_t>>;
 
 DistanceMap buildMinimumDistanceMap(std::vector<uint32_t> const& tfIDs,
                                     int64_t bcSOR, int64_t nBCsPerTF,
-                                    std::vector<int64_t> activeBCs, uint32_t maxDistance)
+                                    std::vector<int64_t>& activeBCs, uint32_t maxDistance)
 {
   const uint32_t overflowDistance = maxDistance + 1;
   DistanceMap distances(tfIDs.size(), std::vector<uint32_t>(nBCsPerTF, overflowDistance));
@@ -90,13 +90,19 @@ DistanceMap buildMinimumDistanceMap(std::vector<uint32_t> const& tfIDs,
   return distances;
 }
 
-void fillVetoHistograms(std::shared_ptr<TH2> const& hVetoTV0, std::shared_ptr<TH2> const& hVetoTVD, int bcInOrbit,
+void fillVetoHistograms(std::shared_ptr<TH2> const& hVetoT00, std::shared_ptr<TH2> const& hVetoTV0,
+                        std::shared_ptr<TH2> const& hVetoTVD, int bcInOrbit,
                         uint32_t distanceFT0, uint32_t distanceFV0, uint32_t distanceFDD)
 {
+  hVetoT00->Fill(bcInOrbit, -1);
   hVetoTV0->Fill(bcInOrbit, -1);
   hVetoTVD->Fill(bcInOrbit, -1);
   for (uint32_t threshold = 0; threshold <= MaxStoredDistance; ++threshold) {
-    if (distanceFT0 <= threshold || distanceFV0 <= threshold) {
+    if (distanceFT0 <= threshold) {
+      continue;
+    }
+    hVetoT00->Fill(bcInOrbit, threshold);
+    if (distanceFV0 <= threshold) {
       continue;
     }
     hVetoTV0->Fill(bcInOrbit, threshold);
@@ -206,8 +212,10 @@ struct DgTwoTrackCandProducer {
     inheritEventSelectionOption("bcselOpts.TimeFrameEndBorderMargin", configuredTFEndBorder);
     registry.add("hTVX", "TVX counts per run;run;TVX BCs", HistType::kTH1D, {{NBCsPerOrbit, 0., NBCsPerOrbit}});
     registry.add("hTVXRCT", "TVX counts per run;run;TVX BCs", HistType::kTH1D, {{NBCsPerOrbit, 0., NBCsPerOrbit}});
+    registry.add("hVetoT00", ";BC in orbit;veto threshold (BC);colliding BC count, no RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
     registry.add("hVetoTV0", ";BC in orbit;veto threshold (BC);colliding BC count, no RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
     registry.add("hVetoTVD", ";BC in orbit;veto threshold (BC);colliding BC count, no RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
+    registry.add("hVetoT00RCT", ";BC in orbit;veto threshold (BC);colliding BC count, RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
     registry.add("hVetoTV0RCT", ";BC in orbit;veto threshold (BC);colliding BC count, RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
     registry.add("hVetoTVDRCT", ";BC in orbit;veto threshold (BC);colliding BC count, RCT mask", HistType::kTH2D, {{NBCsPerOrbit, 0., NBCsPerOrbit}, {17, -1.5, 15.5}});
     LOGF(info, "Veto config: window=%d FT0=%d FV0=%d FDD=%d", vetoBCWindow.value, vetoFT0.value, vetoFV0.value, vetoFDD.value);
@@ -290,12 +298,14 @@ struct DgTwoTrackCandProducer {
     }
 
     const uint32_t scanDistance = std::max(MaxStoredDistance, vetoBCWindow.value);
-    const DistanceMap minDistanceFT0 = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, std::move(bcsWithFT0), scanDistance);
-    const DistanceMap minDistanceFV0 = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, std::move(bcsWithFV0), scanDistance);
-    const DistanceMap minDistanceFDD = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, std::move(bcsWithFDD), scanDistance);
+    const DistanceMap minDistanceFT0 = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, bcsWithFT0, scanDistance);
+    const DistanceMap minDistanceFV0 = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, bcsWithFV0, scanDistance);
+    const DistanceMap minDistanceFDD = buildMinimumDistanceMap(tfIDs, bcSOR, nBCsPerTF, bcsWithFDD, scanDistance);
 
+    auto hVetoT00 = registry.get<TH2>(HIST("hVetoT00"));
     auto hVetoTV0 = registry.get<TH2>(HIST("hVetoTV0"));
     auto hVetoTVD = registry.get<TH2>(HIST("hVetoTVD"));
+    auto hVetoT00RCT = registry.get<TH2>(HIST("hVetoT00RCT"));
     auto hVetoTV0RCT = registry.get<TH2>(HIST("hVetoTV0RCT"));
     auto hVetoTVDRCT = registry.get<TH2>(HIST("hVetoTVDRCT"));
     for (size_t iTF = 0; iTF < tfIDs.size(); ++iTF) {
@@ -309,9 +319,9 @@ struct DgTwoTrackCandProducer {
         const auto distanceFT0 = minDistanceFT0[iTF][bcInTF];
         const auto distanceFV0 = minDistanceFV0[iTF][bcInTF];
         const auto distanceFDD = minDistanceFDD[iTF][bcInTF];
-        fillVetoHistograms(hVetoTV0, hVetoTVD, bcInOrbit, distanceFT0, distanceFV0, distanceFDD);
+        fillVetoHistograms(hVetoT00, hVetoTV0, hVetoTVD, bcInOrbit, distanceFT0, distanceFV0, distanceFDD);
         if (tfPassesRCT[iTF] != 0u) {
-          fillVetoHistograms(hVetoTV0RCT, hVetoTVDRCT, bcInOrbit, distanceFT0, distanceFV0, distanceFDD);
+          fillVetoHistograms(hVetoT00RCT, hVetoTV0RCT, hVetoTVDRCT, bcInOrbit, distanceFT0, distanceFV0, distanceFDD);
         }
       }
     }
